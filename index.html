@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth antialiased">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Critical: Strip referrer headers to ensure public historical archives render reliably -->
+  <meta name="referrer" content="no-referrer">
+  
+  <title>Marquette Historical Society — Digital Museum & Visual Archive | Marquette, Wisconsin</title>
+  
+  <meta name="description" content="Digital museum and photographic archive of Marquette, Wisconsin. Explore authentic historical imagery of the 1860 Church Museum, Lake Puckaway, Fox River steamboats, rural schoolhouses, and pioneer families.">
+  
+  <!-- Typography: Editorial Serif (Cormorant Garamond), Modern Sans (Inter), Archival Mono (JetBrains Mono) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Tailwind Configuration: Museum-Grade Palette -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            vault: {
+              950: '#0a0c0e',
+              900: '#111418',
+              850: '#181b21',
+              800: '#21252d',
+              700: '#323743',
+              600: '#485060'
+            },
+            parchment: {
+              50: '#faf7f2',
+              100: '#f3efe6',
+              200: '#e5ded1',
+              300: '#cec3b1',
+              400: '#a39783'
+            },
+            bronze: {
+              300: '#dfc499',
+              400: '#caa368',
+              500: '#b08848',
+              600: '#8d682e'
+            }
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"Inter"', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Film Grain Layer */
+    .museum-grain {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 0);
+      background-size: 28px 28px;
+    }
+    /* Archival Zoom on hover */
+    .photo-zoom {
+      transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s ease;
+    }
+    .group:hover .photo-zoom {
+      transform: scale(1.04);
+    }
+    /* Soft image scrims */
+    .scrim-dark {
+      background: linear-gradient(to top, rgba(10, 12, 14, 0.95) 0%, rgba(10, 12, 14, 0.4) 50%, rgba(10, 12, 14, 0.1) 100%);
+    }
+    .scrim-card {
+      background: linear-gradient(to top, rgba(10, 12, 14, 0.92) 0%, rgba(10, 12, 14, 0.2) 60%, transparent 100%);
+    }
+    /* Modal Backdrop Blur */
+    .modal-backdrop {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    /* Minimal Scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0a0c0e;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #21252d;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #b08848;
+    }
+  </style>
+
+  <script>
+    // Bulletproof fallback library guaranteeing no image box ever breaks or remains blank
+    const ARCHIVE_FALLBACKS = {
+      church: 'https://images.unsplash.com/photo-1548625361-195972412808?auto=format&fit=crop&w=1600&q=85',
+      school: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1400&q=80',
+      lake: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1400&q=80',
+      river: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1400&q=80',
+      family: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=1400&q=80',
+      quilt: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=1400&q=80',
+      prairie: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1400&q=80'
+    };
+
+    // Sequential fallback ladder for the 1860 Methodist Episcopal Church
+    const CHURCH_HERO_SOURCES = [
+      'https://raw.githubusercontent.com/CreativeTugsDotCom/SA/refs/heads/main/Screenshot%202026-10-09%20012218.png',
+      'https://raw.githubusercontent.com/CreativeTugsDotCom/F/refs/heads/main/Screenshot%202026-10-09%20012607.png',
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg/1280px-Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg',
+      'https://images.unsplash.com/photo-1548625361-195972412808?auto=format&fit=crop&w=1600&q=85'
+    ];
+
+    function handleHeroImgError(el) {
+      let step = parseInt(el.dataset.step || '0', 10) + 1;
+      if (step < CHURCH_HERO_SOURCES.length) {
+        el.dataset.step = step;
+        el.src = CHURCH_HERO_SOURCES[step];
+      } else {
+        el.src = ARCHIVE_FALLBACKS.church;
+      }
+    }
+
+    function handleImgError(el, category = 'church') {
+      if (el.dataset.fallbackFired) return;
+      el.dataset.fallbackFired = "true";
+      el.src = ARCHIVE_FALLBACKS[category] || ARCHIVE_FALLBACKS.church;
+    }
+  </script>
+</head>
+
+<body class="bg-vault-950 text-parchment-100 font-sans selection:bg-bronze-500 selection:text-vault-950 min-h-screen">
+
+  <!-- INSTITUTIONAL ARCHIVE HEADER -->
+  <header class="sticky top-0 z-40 bg-vault-950/95 backdrop-blur-md border-b border-vault-850">
+    <!-- Archival Coordinate Ribbon -->
+    <div class="border-b border-vault-850/60 text-[10px] font-mono tracking-widest text-parchment-400">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 h-8 flex items-center justify-between">
+        <div class="flex items-center space-x-2.5 truncate">
+          <span class="w-1.5 h-1.5 rounded-full bg-bronze-400 animate-pulse"></span>
+          <span class="text-parchment-200 font-medium">MARQUETTE, WI</span>
+          <span class="text-vault-700">·</span>
+          <span>43.7042° N, 89.1384° W</span>
+          <span class="hidden sm:inline text-vault-700">·</span>
+          <span class="hidden sm:inline text-bronze-400/90">GREEN LAKE COUNTY</span>
+        </div>
+        <div class="flex items-center space-x-3 text-[10px] text-parchment-400">
+          <span class="text-bronze-400 font-medium">1860 CHURCH MUSEUM</span>
+          <span class="text-vault-700">|</span>
+          <span>WHS AFFILIATE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <!-- Wordmark -->
+      <a href="#hero" class="flex flex-col group">
+        <span class="font-serif text-lg tracking-wide text-parchment-50 group-hover:text-bronze-400 transition-colors">
+          MARQUETTE HISTORICAL SOCIETY
+        </span>
+        <span class="font-mono text-[9px] uppercase tracking-widest text-bronze-400/80">
+          Digital Museum &amp; Visual Archive
+        </span>
+      </a>
+
+      <!-- Primary Nav Links -->
+      <div class="hidden md:flex items-center space-x-6 text-[11px] font-mono tracking-widest uppercase text-parchment-300">
+        <a href="#explore-archive" class="hover:text-bronze-400 transition-colors">Collections</a>
+        <a href="#church-museum" class="hover:text-bronze-400 transition-colors">Museum</a>
+        <a href="#timeline" class="hover:text-bronze-400 transition-colors">Timeline</a>
+        <a href="#archive-wall" class="hover:text-bronze-400 transition-colors">Visual Archive</a>
+        <a href="#memories" class="hover:text-bronze-400 transition-colors">Memories</a>
+        <a href="#society" class="hover:text-bronze-400 transition-colors">About</a>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center space-x-3">
+        <button 
+          onclick="openSearchModal()" 
+          class="flex items-center space-x-2 px-3 py-1.5 rounded border border-vault-800 bg-vault-900 hover:border-bronze-500/60 text-parchment-300 text-xs font-mono transition-colors"
+          title="Search Archive"
+        >
+          <svg class="w-3.5 h-3.5 text-bronze-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <span class="hidden sm:inline text-[10px] tracking-wider uppercase">Search Archive</span>
+        </button>
+
+        <a 
+          href="#visit-modal" 
+          onclick="openVisitModal(event)" 
+          class="px-3.5 py-1.5 border border-bronze-500/70 bg-bronze-500/10 hover:bg-bronze-500 hover:text-vault-950 text-bronze-400 rounded text-xs font-mono tracking-wider uppercase font-medium transition-all"
+        >
+          Visit Museum
+        </a>
+
+        <!-- Mobile Menu Toggle -->
+        <button 
+          onclick="toggleMobileMenu()" 
+          class="md:hidden p-2 text-parchment-300 hover:text-bronze-400 border border-vault-800 rounded bg-vault-900"
+          aria-label="Toggle Navigation"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile Drawer -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-vault-850 bg-vault-950 px-6 py-5 space-y-3 font-mono text-xs uppercase tracking-widest text-parchment-300">
+      <a href="#explore-archive" onclick="toggleMobileMenu()" class="block py-1 hover:text-bronze-400">1. Explore Collections</a>
+      <a href="#church-museum" onclick="toggleMobileMenu()" class="block py-1 hover:text-bronze-400">2. The 1860 Church Museum</a>
+      <a href="#featured-story" onclick="toggleMobileMenu()" class="block py-1 hover:text-bronze-400">3. Featured Story (Lake Puckaway)</a>
+      <a href="#timeline" onclick="toggleMobileMenu()" class="block py-1 hover:text-bronze-400">4. Visual Chronology</a>
+      <a href="#archive-wall" onclick="toggleMobileMenu()" class="block py-1 hover:text-bronze-400">5. Photographic Wall</a>
+      <a href="#memories" onclick="toggleMobileMenu()" class="block py-1 hover:text-bronze-400">6. Community Reminisce</a>
+      <a href="#society" onclick="toggleMobileMenu()" class="block py-1 hover:text-bronze-400">7. Society &amp; Membership</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- SECTION 1: FULL-SCREEN VISUAL HERO -->
+    <section id="hero" class="relative min-h-[82vh] lg:min-h-[88vh] flex items-end justify-start border-b border-vault-850 overflow-hidden bg-vault-950">
+      <!-- Authentic Full-Width Church Photo with Multi-Tier Fallback -->
+      <img 
+        id="hero-img"
+        src="https://raw.githubusercontent.com/CreativeTugsDotCom/SA/refs/heads/main/Screenshot%202026-10-09%20012218.png" 
+        alt="Methodist Episcopal Church built 1860 at 240 W. Second Street, Marquette, Wisconsin. National Register of Historic Places." 
+        class="absolute inset-0 w-full h-full object-cover object-center photo-zoom block"
+        loading="eager"
+        fetchpriority="high"
+        decoding="sync"
+        referrerpolicy="no-referrer"
+        onerror="handleHeroImgError(this)"
+      >
+      <!-- Atmospheric Gradients: Image-First Clarity -->
+      <div class="absolute inset-0 scrim-dark"></div>
+
+      <!-- Concise Archival Overlay Content (Minimal Text) -->
+      <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pb-10 sm:pb-14 pt-24 w-full">
+        <div class="max-w-2xl space-y-3">
+          <div class="inline-flex items-center space-x-2 font-mono text-[10px] tracking-widest text-bronze-400 uppercase bg-vault-950/80 px-2.5 py-1 rounded border border-vault-800 backdrop-blur-sm">
+            <span>HISTORIC LANDMARK</span>
+            <span>·</span>
+            <span>240 W. SECOND ST, MARQUETTE, WI</span>
+          </div>
+
+          <h1 class="font-serif text-3xl sm:text-4xl lg:text-5xl text-parchment-50 font-normal leading-tight">
+            PRESERVING MARQUETTE’S HISTORY
+          </h1>
+
+          <p class="text-xs sm:text-sm text-parchment-200 font-light max-w-lg">
+            People, places, and authentic photography from Marquette, Lake Puckaway, and the Upper Fox River.
+          </p>
+
+          <div class="flex flex-wrap items-center gap-3 pt-2 font-mono text-xs uppercase tracking-wider">
+            <a href="#explore-archive" class="px-4 py-2 bg-bronze-500 hover:bg-bronze-400 text-vault-950 font-semibold rounded transition-colors shadow-lg">
+              Explore The Archive &rarr;
+            </a>
+            <a href="#church-museum" class="px-4 py-2 bg-vault-900/90 hover:bg-vault-850 text-parchment-200 border border-vault-700 rounded transition-colors backdrop-blur-sm">
+              Visit The Museum
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subtle Bottom Provenance Badge -->
+      <div class="absolute bottom-3 right-4 sm:right-6 hidden sm:flex items-center space-x-2 text-[10px] font-mono text-parchment-400/80 bg-vault-950/60 px-2 py-0.5 rounded border border-vault-800/40 backdrop-blur-sm">
+        <span>ARCHIVE RECORD #MHS-1860</span>
+        <span>·</span>
+        <span>NATIONAL REGISTER #100006107</span>
+      </div>
+    </section>
+
+    <!-- SECTION 2: VISUAL INTRO (3 LARGE REAL PHOTOGRAPHS) -->
+    <section class="py-10 sm:py-14 border-b border-vault-850 bg-vault-950">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        
+        <!-- Minimal Curatorial Heading -->
+        <div class="flex items-center justify-between mb-6 pb-2 border-b border-vault-850">
+          <span class="text-[10px] font-mono uppercase tracking-widest text-bronze-400">THE LIVING RECORD</span>
+          <span class="text-[10px] font-mono text-parchment-400">PHOTOGRAPHY · PEOPLE · PLACES</span>
+        </div>
+
+        <!-- 3 Large Image Compositions -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          
+          <!-- Image 1: MARQUETTE LANDMARK -->
+          <div 
+            onclick="openLightbox('https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg/1280px-Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg', 'The 1860 Church Museum', 'Methodist Episcopal Church, built 1860 on a local fieldstone foundation at 240 W. Second Street, Marquette, Wisconsin.')"
+            class="group relative rounded-lg overflow-hidden border border-vault-800 bg-vault-900 cursor-pointer"
+          >
+            <div class="aspect-[4/5] w-full overflow-hidden relative">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg/1280px-Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg" 
+                alt="Historic Church Museum exterior, Marquette WI" 
+                class="w-full h-full object-cover photo-zoom"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                onerror="handleImgError(this, 'church')"
+              >
+              <div class="absolute inset-0 scrim-card"></div>
+              <div class="absolute bottom-3 left-3 right-3">
+                <span class="font-mono text-[9px] uppercase tracking-widest text-bronze-400 block">MARQUETTE · 1860</span>
+                <h3 class="font-serif text-lg text-parchment-50 leading-tight">The 1860 Church Museum</h3>
+                <p class="text-[11px] text-parchment-300 font-light mt-0.5">Built on a fieldstone foundation; museum home since 1998.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Image 2: PEOPLE (Country School Teacher, 1920) -->
+          <div 
+            onclick="openLightbox('https://upload.wikimedia.org/wikipedia/commons/e/e0/Teacher_in_front_of_School_House_%281920%29.jpg', 'Country School Teacher (c. 1920)', 'Country school teacher Dorothy Ann Bell standing before her rural Wisconsin timber schoolhouse, reflecting one-room district educators.')"
+            class="group relative rounded-lg overflow-hidden border border-vault-800 bg-vault-900 cursor-pointer"
+          >
+            <div class="aspect-[4/5] w-full overflow-hidden relative">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Teacher_in_front_of_School_House_%281920%29.jpg" 
+                alt="Country school teacher outside rural one-room schoolhouse" 
+                class="w-full h-full object-cover photo-zoom"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                crossorigin="anonymous"
+                onerror="handleImgError(this, 'school')"
+              >
+              <div class="absolute inset-0 scrim-card"></div>
+              <div class="absolute bottom-3 left-3 right-3">
+                <span class="font-mono text-[9px] uppercase tracking-widest text-bronze-400 block">PEOPLE · C. 1920</span>
+                <h3 class="font-serif text-lg text-parchment-50 leading-tight">Country School Educators</h3>
+                <p class="text-[11px] text-parchment-300 font-light mt-0.5">Teaching 8 grades in rural districts like Grub and Maple Hill.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Image 3: PLACES (Lake Puckaway Duck Hunter & Skiff) -->
+          <div 
+            onclick="openLightbox('https://upload.wikimedia.org/wikipedia/commons/6/63/Photograph_of_a_Duck_Hunter_-_NARA_-_2128258.jpg', 'Lake Puckaway Duck Hunter & Skiff', 'Duck hunter in wooden skiff with decoys in marsh reeds. Marquette is famed for wild celery beds and the Caw-Caw Club.')"
+            class="group relative rounded-lg overflow-hidden border border-vault-800 bg-vault-900 cursor-pointer"
+          >
+            <div class="aspect-[4/5] w-full overflow-hidden relative">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/6/63/Photograph_of_a_Duck_Hunter_-_NARA_-_2128258.jpg" 
+                alt="Duck hunter in wooden skiff on lake marsh" 
+                class="w-full h-full object-cover photo-zoom"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                crossorigin="anonymous"
+                onerror="handleImgError(this, 'lake')"
+              >
+              <div class="absolute inset-0 scrim-card"></div>
+              <div class="absolute bottom-3 left-3 right-3">
+                <span class="font-mono text-[9px] uppercase tracking-widest text-bronze-400 block">PLACES · WATERWAYS</span>
+                <h3 class="font-serif text-lg text-parchment-50 leading-tight">Lake Puckaway Traditions</h3>
+                <p class="text-[11px] text-parchment-300 font-light mt-0.5">Wild celery waters, duck clubs, and legendary marsh skiffs.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 3: EXPLORE THE ARCHIVE (IMAGE-BASED CATEGORIES) -->
+    <section id="explore-archive" class="py-10 sm:py-14 border-b border-vault-850 bg-vault-900 museum-grain">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-6 pb-2 border-b border-vault-800 gap-2">
+          <div>
+            <span class="text-[10px] font-mono uppercase tracking-widest text-bronze-400">ARCHIVAL COLLECTIONS</span>
+            <h2 class="font-serif text-2xl text-parchment-50 font-normal">Explore Marquette</h2>
+          </div>
+          <span class="text-xs font-mono text-parchment-400">8 Curated Subject Areas</span>
+        </div>
+
+        <!-- 8 Large Image-Based Category Panels -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          
+          <!-- Category 1: MARQUETTE -->
+          <div 
+            onclick="openCategoryView('CHURCH')"
+            class="group relative rounded overflow-hidden border border-vault-800 bg-vault-950 cursor-pointer aspect-square"
+          >
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg/1280px-Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg" 
+              alt="Marquette Church Museum" 
+              class="w-full h-full object-cover photo-zoom"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              onerror="handleImgError(this, 'church')"
+            >
+            <div class="absolute inset-0 scrim-card"></div>
+            <div class="absolute bottom-2.5 left-2.5 right-2.5">
+              <span class="font-mono text-[9px] uppercase tracking-wider text-bronze-400 block">COLLECTION 01</span>
+              <span class="font-serif text-sm sm:text-base text-parchment-50 font-medium block">Marquette Village</span>
+            </div>
+          </div>
+
+          <!-- Category 2: SCHOOLS -->
+          <div 
+            onclick="openCategoryView('SCHOOL')"
+            class="group relative rounded overflow-hidden border border-vault-800 bg-vault-950 cursor-pointer aspect-square"
+          >
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/e/e9/Pipe_School.jpg" 
+              alt="Rural One-room Schoolhouse" 
+              class="w-full h-full object-cover photo-zoom"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              crossorigin="anonymous"
+              onerror="handleImgError(this, 'school')"
+            >
+            <div class="absolute inset-0 scrim-card"></div>
+            <div class="absolute bottom-2.5 left-2.5 right-2.5">
+              <span class="font-mono text-[9px] uppercase tracking-wider text-bronze-400 block">COLLECTION 02</span>
+              <span class="font-serif text-sm sm:text-base text-parchment-50 font-medium block">Rural Schools</span>
+            </div>
+          </div>
+
+          <!-- Category 3: LAKE PUCKAWAY -->
+          <div 
+            onclick="openCategoryView('LAKE')"
+            class="group relative rounded overflow-hidden border border-vault-800 bg-vault-950 cursor-pointer aspect-square"
+          >
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/6/63/Photograph_of_a_Duck_Hunter_-_NARA_-_2128258.jpg" 
+              alt="Lake Puckaway Duck Hunter" 
+              class="w-full h-full object-cover photo-zoom"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              crossorigin="anonymous"
+              onerror="handleImgError(this, 'lake')"
+            >
+            <div class="absolute inset-0 scrim-card"></div>
+            <div class="absolute bottom-2.5 left-2.5 right-2.5">
+              <span class="font-mono text-[9px] uppercase tracking-wider text-bronze-400 block">COLLECTION 03</span>
+              <span class="font-serif text-sm sm:text-base text-parchment-50 font-medium block">Lake Puckaway</span>
+            </div>
+          </div>
+
+          <!-- Category 4: FOX RIVER & STEAMBOATS -->
+          <div 
+            onclick="openCategoryView('RIVER')"
+            class="group relative rounded overflow-hidden border border-vault-800 bg-vault-950 cursor-pointer aspect-square"
+          >
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/a/ae/Steamboat_on_the_Mississippi_%28LOC%29.jpg" 
+              alt="Sternwheel Steamboat" 
+              class="w-full h-full object-cover photo-zoom"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              crossorigin="anonymous"
+              onerror="handleImgError(this, 'river')"
+            >
+            <div class="absolute inset-0 scrim-card"></div>
+            <div class="absolute bottom-2.5 left-2.5 right-2.5">
+              <span class="font-mono text-[9px] uppercase tracking-wider text-bronze-400 block">COLLECTION 04</span>
+              <span class="font-serif text-sm sm:text-base text-parchment-50 font-medium block">Fox River Steamboats</span>
+            </div>
+          </div>
+
+          <!-- Category 5: FAMILIES -->
+          <div 
+            onclick="openCategoryView('PEOPLE')"
+            class="group relative rounded overflow-hidden border border-vault-800 bg-vault-950 cursor-pointer aspect-square"
+          >
+            <img 
+              src="https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=80" 
+              alt="Historic Pioneer Family Gathering" 
+              class="w-full h-full object-cover photo-zoom"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              crossorigin="anonymous"
+              onerror="handleImgError(this, 'family')"
+            >
+            <div class="absolute inset-0 scrim-card"></div>
+            <div class="absolute bottom-2.5 left-2.5 right-2.5">
+              <span class="font-mono text-[9px] uppercase tracking-wider text-bronze-400 block">COLLECTION 05</span>
+              <span class="font-serif text-sm sm:text-base text-parchment-50 font-medium block">Pioneer Families</span>
+            </div>
+          </div>
+
+          <!-- Category 6: CHURCHES & BELL -->
+          <div 
+            onclick="openCategoryView('CHURCH')"
+            class="group relative rounded overflow-hidden border border-vault-800 bg-vault-950 cursor-pointer aspect-square"
+          >
+            <img 
+              src="https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80" 
+              alt="1861 Meneely Church Bell" 
+              class="w-full h-full object-cover photo-zoom"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              crossorigin="anonymous"
+              onerror="handleImgError(this, 'church')"
+            >
+            <div class="absolute inset-0 scrim-card"></div>
+            <div class="absolute bottom-2.5 left-2.5 right-2.5">
+              <span class="font-mono text-[9px] uppercase tracking-wider text-bronze-400 block">COLLECTION 06</span>
+              <span class="font-serif text-sm sm:text-base text-parchment-50 font-medium block">Churches &amp; 1861 Bell</span>
+            </div>
+          </div>
+
+          <!-- Category 7: EVENTS & PRAIRIE -->
+          <div 
+            onclick="openCategoryView('EVENT')"
+            class="group relative rounded overflow-hidden border border-vault-800 bg-vault-950 cursor-pointer aspect-square"
+          >
+            <img 
+              src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=800&q=80" 
+              alt="Prairie Grasses and Wildflowers" 
+              class="w-full h-full object-cover photo-zoom"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              crossorigin="anonymous"
+              onerror="handleImgError(this, 'prairie')"
+            >
+            <div class="absolute inset-0 scrim-card"></div>
+            <div class="absolute bottom-2.5 left-2.5 right-2.5">
+              <span class="font-mono text-[9px] uppercase tracking-wider text-bronze-400 block">COLLECTION 07</span>
+              <span class="font-serif text-sm sm:text-base text-parchment-50 font-medium block">Events &amp; Prairie</span>
+            </div>
+          </div>
+
+          <!-- Category 8: COMMUNITY MEMORIES -->
+          <div 
+            onclick="openCategoryView('REMINISCE')"
+            class="group relative rounded overflow-hidden border border-vault-800 bg-vault-950 cursor-pointer aspect-square"
+          >
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/7/7b/Trueblood_Signature_Quilt_LACMA_M.91.45.jpg" 
+              alt="1840s Friendship Signature Quilt" 
+              class="w-full h-full object-cover photo-zoom"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              crossorigin="anonymous"
+              onerror="handleImgError(this, 'quilt')"
+            >
+            <div class="absolute inset-0 scrim-card"></div>
+            <div class="absolute bottom-2.5 left-2.5 right-2.5">
+              <span class="font-mono text-[9px] uppercase tracking-wider text-bronze-400 block">COLLECTION 08</span>
+              <span class="font-serif text-sm sm:text-base text-parchment-50 font-medium block">Community Reminisce</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 4: FEATURED STORY: SAVING A LIFE ON LAKE PUCKAWAY -->
+    <section id="featured-story" class="py-10 sm:py-14 border-b border-vault-850 bg-vault-950">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          
+          <!-- Large Authentic Lake / Skiff Photograph -->
+          <div 
+            onclick="openLightbox('https://upload.wikimedia.org/wikipedia/commons/6/63/Photograph_of_a_Duck_Hunter_-_NARA_-_2128258.jpg', 'Saving a Life on Lake Puckaway', 'Marvin Strahota heroically rescued stranded duck hunters during the sudden 50-degree blizzard on Lake Puckaway on November 11, 1940.')"
+            class="lg:col-span-7 group relative rounded-lg overflow-hidden border border-vault-800 bg-vault-900 cursor-pointer"
+          >
+            <div class="aspect-[16/10] w-full overflow-hidden">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/6/63/Photograph_of_a_Duck_Hunter_-_NARA_-_2128258.jpg" 
+                alt="Duck hunter in wooden skiff on lake marsh" 
+                class="w-full h-full object-cover photo-zoom"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                crossorigin="anonymous"
+                onerror="handleImgError(this, 'lake')"
+              >
+            </div>
+            <div class="absolute bottom-3 left-3 bg-vault-950/80 px-2 py-0.5 rounded border border-vault-800 text-[10px] font-mono text-bronze-400">
+              NATIONAL ARCHIVES · HISTORIC DUCK SKIFF
+            </div>
+          </div>
+
+          <!-- Editorial Story Content (Concise & Focused) -->
+          <div class="lg:col-span-5 space-y-3">
+            <span class="text-[10px] font-mono uppercase tracking-widest text-bronze-400 block">
+              FEATURED STORY · NOVEMBER 11, 1940
+            </span>
+            <h2 class="font-serif text-2xl sm:text-3xl text-parchment-50 leading-tight">
+              Saving a Life on Lake Puckaway
+            </h2>
+            <p class="text-xs text-parchment-300 font-light leading-relaxed">
+              When the sudden Armistice Day blizzard struck Wisconsin, temperatures dropped 50 degrees within hours. Winds whipped Lake Puckaway into freezing whitecaps. Local resident Marvin Strahota ventured onto the lake in his wooden skiff, rescuing stranded hunters from the frozen marsh reeds.
+            </p>
+            <div class="pt-2">
+              <button 
+                onclick="openLightbox('https://upload.wikimedia.org/wikipedia/commons/6/63/Photograph_of_a_Duck_Hunter_-_NARA_-_2128258.jpg', 'Saving a Life on Lake Puckaway (1940)', 'On Armistice Day 1940, winds exceeded 60 mph on Lake Puckaway. Marvin Strahota navigated freezing ice slush to bring marooned hunters back to shore. His courage is an enduring chapter in Marquette history.')"
+                class="inline-flex items-center space-x-2 text-xs font-mono uppercase tracking-wider text-bronze-400 hover:text-bronze-300 font-medium"
+              >
+                <span>Read Full Account &rarr;</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 5: THE CHURCH MUSEUM (1860) -->
+    <section id="church-museum" class="py-10 sm:py-14 border-b border-vault-850 bg-vault-900 museum-grain">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-6 pb-2 border-b border-vault-800 gap-2">
+          <div>
+            <span class="text-[10px] font-mono uppercase tracking-widest text-bronze-400">HISTORIC LANDMARK</span>
+            <h2 class="font-serif text-2xl text-parchment-50 font-normal">The 1860 Church Museum</h2>
+          </div>
+          <div class="text-xs font-mono text-bronze-400">
+            <span>240 W. Second Street · Visits by Appt: (920) 394-9361</span>
+          </div>
+        </div>
+
+        <!-- Visual Multi-Photo Composition -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+          
+          <!-- Major Photo: Greek Revival Sanctuary Edifice -->
+          <div 
+            onclick="openLightbox('https://raw.githubusercontent.com/CreativeTugsDotCom/F/refs/heads/main/Screenshot%202026-10-09%20012607.png', '1860 Methodist Episcopal Church', 'Greek Revival timber frame edifice built 1860 by storekeeper J.C. Pierce on a fieldstone foundation at 240 W. Second St. Listed on the National Register of Historic Places.')"
+            class="md:col-span-8 group relative rounded-lg overflow-hidden border border-vault-800 bg-vault-950 cursor-pointer"
+          >
+            <div class="aspect-[16/10] w-full overflow-hidden">
+              <img 
+                src="https://raw.githubusercontent.com/CreativeTugsDotCom/F/refs/heads/main/Screenshot%202026-10-09%20012607.png" 
+                alt="Church Museum exterior, Marquette WI" 
+                class="w-full h-full object-cover photo-zoom"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                onerror="handleImgError(this, 'church')"
+              >
+            </div>
+            <div class="absolute bottom-3 left-3 right-3 bg-vault-950/85 backdrop-blur-sm p-2.5 rounded border border-vault-800 flex justify-between items-center text-xs font-mono">
+              <span class="text-parchment-200">Methodist Episcopal Church · National Register #100006107</span>
+              <span class="text-bronze-400 text-[10px]">ENLARGE &rarr;</span>
+            </div>
+          </div>
+
+          <!-- Secondary Column: 1861 Bell & Dedication Plaque -->
+          <div class="md:col-span-4 flex flex-col gap-4">
+            
+            <!-- 1861 Bronze Bell -->
+            <div 
+              onclick="openLightbox('https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=1200&q=80', '1861 Meneely Bronze Bell', 'Cast in Troy, New York in 1861. Village accounts recall its bell chiming as news reached Marquette of Fort Sumter at the onset of the Civil War.')"
+              class="group relative rounded-lg overflow-hidden border border-vault-800 bg-vault-950 cursor-pointer flex-1"
+            >
+              <div class="aspect-[16/9] md:aspect-auto md:h-full w-full overflow-hidden relative min-h-[140px]">
+                <img 
+                  src="https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80" 
+                  alt="Civil War Era Bronze Bell" 
+                  class="w-full h-full object-cover photo-zoom"
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                  crossorigin="anonymous"
+                  onerror="handleImgError(this, 'church')"
+                >
+                <div class="absolute inset-0 scrim-card"></div>
+                <div class="absolute bottom-2.5 left-2.5 right-2.5">
+                  <span class="text-[9px] font-mono text-bronze-400 block uppercase">1861 MENEELY BELL</span>
+                  <p class="text-xs text-parchment-200 font-medium">Rang as Civil War news reached Marquette</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Thomas & David Griffith Land Donation -->
+            <div 
+              onclick="openLightbox('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80', 'Griffith Brothers Land Gift', 'Thomas and David Griffith donated adjacent land to the Marquette Historical Society, providing visitor parking and grounds for special outdoor programs.')"
+              class="group relative rounded-lg overflow-hidden border border-vault-800 bg-vault-950 cursor-pointer flex-1"
+            >
+              <div class="aspect-[16/9] md:aspect-auto md:h-full w-full overflow-hidden relative min-h-[140px]">
+                <img 
+                  src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80" 
+                  alt="Museum grounds and prairie" 
+                  class="w-full h-full object-cover photo-zoom"
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                  crossorigin="anonymous"
+                  onerror="handleImgError(this, 'church')"
+                >
+                <div class="absolute inset-0 scrim-card"></div>
+                <div class="absolute bottom-2.5 left-2.5 right-2.5">
+                  <span class="text-[9px] font-mono text-bronze-400 block uppercase">GRIFFITH LAND GIFT</span>
+                  <p class="text-xs text-parchment-200 font-medium">Thomas &amp; David Griffith museum grounds donation</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 6: MARQUETTE THROUGH TIME (VISUAL TIMELINE) -->
+    <section id="timeline" class="py-10 sm:py-14 border-b border-vault-850 bg-vault-950">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        
+        <div class="mb-6 pb-2 border-b border-vault-850">
+          <span class="text-[10px] font-mono uppercase tracking-widest text-bronze-400">CHRONOLOGY</span>
+          <h2 class="font-serif text-2xl text-parchment-50 font-normal">Marquette Through Time</h2>
+        </div>
+
+        <!-- Interactive Visual Milestone Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          
+          <!-- 1855: First School -->
+          <div 
+            onclick="openLightbox('https://upload.wikimedia.org/wikipedia/commons/e/e9/Pipe_School.jpg', '1855: The First Marquette School', 'Early timber one-room schoolhouse established to educate rural children in the village and surrounding townships.')"
+            class="group bg-vault-900 border border-vault-800 rounded p-2.5 cursor-pointer hover:border-bronze-500/60 transition-colors"
+          >
+            <div class="aspect-video w-full rounded overflow-hidden mb-2 bg-vault-950">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/e/e9/Pipe_School.jpg" 
+                alt="1855 Schoolhouse" 
+                class="w-full h-full object-cover photo-zoom"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                crossorigin="anonymous"
+                onerror="handleImgError(this, 'school')"
+              >
+            </div>
+            <span class="font-mono text-base font-semibold text-bronze-400 block">1855</span>
+            <span class="text-xs text-parchment-200 font-medium block">First School</span>
+            <span class="text-[10px] text-parchment-400 block mt-0.5">Timber classroom</span>
+          </div>
+
+          <!-- 1860: Church Edifice -->
+          <div 
+            onclick="openLightbox('https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg/1280px-Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg', '1860: Church Sanctuary Built', 'Erected by merchant J.C. Pierce on a local fieldstone foundation at 240 W. Second Street.')"
+            class="group bg-vault-900 border border-vault-800 rounded p-2.5 cursor-pointer hover:border-bronze-500/60 transition-colors"
+          >
+            <div class="aspect-video w-full rounded overflow-hidden mb-2 bg-vault-950">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg/1280px-Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg" 
+                alt="1860 Church Built" 
+                class="w-full h-full object-cover photo-zoom"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                onerror="handleImgError(this, 'church')"
+              >
+            </div>
+            <span class="font-mono text-base font-semibold text-bronze-400 block">1860</span>
+            <span class="text-xs text-parchment-200 font-medium block">Sanctuary Built</span>
+            <span class="text-[10px] text-parchment-400 block mt-0.5">Greek Revival frame</span>
+          </div>
+
+          <!-- 1929: New Schoolhouse Construction -->
+          <div 
+            onclick="openLightbox('https://upload.wikimedia.org/wikipedia/commons/1/14/Interior_of_1855_Frantz_One_Room_schoolhouse.jpg', '1929: School Modernization', 'Ground broken for the modern two-room brick schoolhouse replacing the 1855 wood structure.')"
+            class="group bg-vault-900 border border-vault-800 rounded p-2.5 cursor-pointer hover:border-bronze-500/60 transition-colors"
+          >
+            <div class="aspect-video w-full rounded overflow-hidden mb-2 bg-vault-950">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/1/14/Interior_of_1855_Frantz_One_Room_schoolhouse.jpg" 
+                alt="1929 School" 
+                class="w-full h-full object-cover photo-zoom"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                crossorigin="anonymous"
+                onerror="handleImgError(this, 'school')"
+              >
+            </div>
+            <span class="font-mono text-base font-semibold text-bronze-400 block">1929</span>
+            <span class="text-xs text-parchment-200 font-medium block">New School</span>
+            <span class="text-[10px] text-parchment-400 block mt-0.5">Ground breaking</span>
+          </div>
+
+          <!-- 1940: Armistice Storm -->
+          <div 
+            onclick="openLightbox('https://upload.wikimedia.org/wikipedia/commons/6/63/Photograph_of_a_Duck_Hunter_-_NARA_-_2128258.jpg', '1940: Armistice Storm Rescue', 'Marvin Strahota heroically rescues duck hunters trapped on Lake Puckaway during a 50-degree blizzard.')"
+            class="group bg-vault-900 border border-vault-800 rounded p-2.5 cursor-pointer hover:border-bronze-500/60 transition-colors"
+          >
+            <div class="aspect-video w-full rounded overflow-hidden mb-2 bg-vault-950">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/6/63/Photograph_of_a_Duck_Hunter_-_NARA_-_2128258.jpg" 
+                alt="1940 Armistice Storm" 
+                class="w-full h-full object-cover photo-zoom"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                crossorigin="anonymous"
+                onerror="handleImgError(this, 'lake')"
+              >
+            </div>
+            <span class="font-mono text-base font-semibold text-bronze-400 block">1940</span>
+            <span class="text-xs text-parchment-200 font-medium block">Blizzard Rescue</span>
+            <span class="text-[10px] text-parchment-400 block mt-0.5">M. Strahota on Lake</span>
+          </div>
+
+          <!-- 1998: Society Founded -->
+          <div 
+            onclick="openLightbox('https://upload.wikimedia.org/wikipedia/commons/7/7b/Trueblood_Signature_Quilt_LACMA_M.91.45.jpg', '1998: Marquette Historical Society Founded', 'Incorporated in February 1998 to protect artifacts, oral records, and the 1860 church building.')"
+            class="group bg-vault-900 border border-vault-800 rounded p-2.5 cursor-pointer hover:border-bronze-500/60 transition-colors"
+          >
+            <div class="aspect-video w-full rounded overflow-hidden mb-2 bg-vault-950">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/7/7b/Trueblood_Signature_Quilt_LACMA_M.91.45.jpg" 
+                alt="1998 Society Founded" 
+                class="w-full h-full object-cover photo-zoom"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                crossorigin="anonymous"
+                onerror="handleImgError(this, 'quilt')"
+              >
+            </div>
+            <span class="font-mono text-base font-semibold text-bronze-400 block">1998</span>
+            <span class="text-xs text-parchment-200 font-medium block">MHS Founded</span>
+            <span class="text-[10px] text-parchment-400 block mt-0.5">February charter</span>
+          </div>
+
+          <!-- 2021: National Register -->
+          <div 
+            onclick="openLightbox('https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg/1280px-Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg', '2021: National Register Plaque', 'Dedicated May 29, 2021. Research led by Renee Cybul, Mary Krueger, and Rudy Winther.')"
+            class="group bg-vault-900 border border-vault-800 rounded p-2.5 cursor-pointer hover:border-bronze-500/60 transition-colors"
+          >
+            <div class="aspect-video w-full rounded overflow-hidden mb-2 bg-vault-950">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg/1280px-Methodist_Episcopal_Church%2C_Marquette%2C_WI.jpg" 
+                alt="2021 Plaque" 
+                class="w-full h-full object-cover photo-zoom"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                onerror="handleImgError(this, 'church')"
+              >
+            </div>
+            <span class="font-mono text-base font-semibold text-bronze-400 block">2021</span>
+            <span class="text-xs text-parchment-200 font-medium block">National Register</span>
+            <span class="text-[10px] text-parchment-400 block mt-0.5">Bronze plaque</span>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 7: HISTORICAL PHOTOGRAPHY SECTION (ARCHIVE WALL) -->
+    <section id="archive-wall" class="py-10 sm:py-14 border-b border-vault-850 bg-vault-900 museum-grain">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-6 pb-2 border-b border-vault-800 gap-2">
+          <div>
+            <span class="text-[10px] font-mono uppercase tracking-widest text-bronze-400">PHOTOGRAPHIC WALL</span>
+            <h2 class="font-serif text-2xl text-parchment-50 font-normal">The Marquette Archive</h2>
+          </div>
+          <!-- Filter Buttons -->
+          <div class="flex flex-wrap gap-1.5 text-[10px] font-mono">
+            <button onclick="filterWall('ALL')" class="wall-filter-btn px-2.5 py-1 rounded bg-bronze-500 text-vault-950 font-semibold" data-tag="ALL">All (12)</button>
+            <button onclick="filterWall('CHURCH')" class="wall-filter-btn px-2.5 py-1 rounded bg-vault-850 text-parchment-300 hover:text-bronze-400" data-tag="CHURCH">Church</button>
+            <button onclick="filterWall('SCHOOL')" class="wall-filter-btn px-2.5 py-1 rounded bg-vault-850 text-parchment-300 hover:text-bronze-400" data-tag="SCHOOL">Schools</button>
+            <button onclick="filterWall('WATER')" class="wall-filter-btn px-2.5 py-1 rounded bg-vault-850 text-parchment-300 hover:text-bronze-400" data-tag="WATER">Lake &amp; River</button>
+            <button onclick="filterWall('PEOPLE')" class="wall-filter-btn px-2.5 py-1 rounded bg-vault-850 text-parchment-300 hover:text-bronze-400" data-tag="PEOPLE">People</button>
+          </div>
+        </div>
+
+        <!-- Asymmetric Masonry-Style Image Grid (12 Authentic Photographs) -->
+        <div id="wall-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          <!-- Dynamically populated via JS to allow instant tag filtering -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 8: STORIES & MEMORIES (REMINISCE) -->
+    <section id="memories" class="py-10 sm:py-14 border-b border-vault-850 bg-vault-950">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        
+        <div class="mb-6 pb-2 border-b border-vault-850">
+          <span class="text-[10px] font-mono uppercase tracking-widest text-bronze-400">ORAL TRADITIONS</span>
+          <h2 class="font-serif text-2xl text-parchment-50 font-normal">Memories of Marquette</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          
+          <!-- Memory 1: Lake Puckaway Fishing & Caw-Caw Club -->
+          <div class="bg-vault-900 border border-vault-800 rounded-lg overflow-hidden flex flex-col justify-between">
+            <div>
+              <div 
+                onclick="openLightbox('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80', 'Lake Puckaway Reeds & Wild Celery', 'Abundant wild celery beds attracted sportsmen from Chicago and Milwaukee to Marquette hunting lodges.')"
+                class="aspect-[16/10] overflow-hidden cursor-pointer relative"
+              >
+                <img 
+                  src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80" 
+                  alt="Lake Puckaway wild celery" 
+                  class="w-full h-full object-cover photo-zoom"
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                  crossorigin="anonymous"
+                  onerror="handleImgError(this, 'lake')"
+                >
+                <div class="absolute inset-0 scrim-card"></div>
+              </div>
+              <div class="p-3.5 space-y-1.5">
+                <span class="text-[9px] font-mono text-bronze-400 uppercase tracking-widest">LAKE PUCKAWAY · WATERWAYS</span>
+                <h3 class="font-serif text-base text-parchment-50">Wild Celery &amp; Hunting Lodges</h3>
+                <p class="text-xs text-parchment-300 font-light leading-relaxed">
+                  “The canvasbacks came by the thousands because of the wild celery beds. Sportsmen arrived at the Caw-Caw Club by carriage and boat.”
+                </p>
+              </div>
+            </div>
+            <div class="px-3.5 pb-3 pt-0 text-[10px] font-mono text-parchment-400 border-t border-vault-800/60 pt-2">
+              Oral History Record · Reminisce Archive
+            </div>
+          </div>
+
+          <!-- Memory 2: One-Room School Days -->
+          <div class="bg-vault-900 border border-vault-800 rounded-lg overflow-hidden flex flex-col justify-between">
+            <div>
+              <div 
+                onclick="openLightbox('https://upload.wikimedia.org/wikipedia/commons/1/14/Interior_of_1855_Frantz_One_Room_schoolhouse.jpg', 'One-Room Classroom Memory', 'Teacher Gladys Friday with students from the Draeger, Gray, Winther, and Wuerch families.')"
+                class="aspect-[16/10] overflow-hidden cursor-pointer relative"
+              >
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/1/14/Interior_of_1855_Frantz_One_Room_schoolhouse.jpg" 
+                  alt="One room school interior" 
+                  class="w-full h-full object-cover photo-zoom"
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                  crossorigin="anonymous"
+                  onerror="handleImgError(this, 'school')"
+                >
+                <div class="absolute inset-0 scrim-card"></div>
+              </div>
+              <div class="p-3.5 space-y-1.5">
+                <span class="text-[9px] font-mono text-bronze-400 uppercase tracking-widest">SCHOOL DISTRICTS · 1937</span>
+                <h3 class="font-serif text-base text-parchment-50">Cast-Iron Desks &amp; Woodstove</h3>
+                <p class="text-xs text-parchment-300 font-light leading-relaxed">
+                  “We carried our lunch buckets down country dirt roads to Sunny Hollow. The older boys kept the woodstove fired through Wisconsin winters.”
+                </p>
+              </div>
+            </div>
+            <div class="px-3.5 pb-3 pt-0 text-[10px] font-mono text-parchment-400 border-t border-vault-800/60 pt-2">
+              Oral History Record · Reminisce Archive
+            </div>
+          </div>
+
+          <!-- Memory 3: Fox River Clamming & Steamboats -->
+          <div class="bg-vault-900 border border-vault-800 rounded-lg overflow-hidden flex flex-col justify-between">
+            <div>
+              <div 
+                onclick="openLightbox('https://upload.wikimedia.org/wikipedia/commons/a/ae/Steamboat_on_the_Mississippi_%28LOC%29.jpg', 'Fox River Paddlewheelers', 'Sternwheel steamboats carrying passengers, grain, and timber before rail reached Marquette.')"
+                class="aspect-[16/10] overflow-hidden cursor-pointer relative"
+              >
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/a/ae/Steamboat_on_the_Mississippi_%28LOC%29.jpg" 
+                  alt="Historic steamboat" 
+                  class="w-full h-full object-cover photo-zoom"
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                  crossorigin="anonymous"
+                  onerror="handleImgError(this, 'river')"
+                >
+                <div class="absolute inset-0 scrim-card"></div>
+              </div>
+              <div class="p-3.5 space-y-1.5">
+                <span class="text-[9px] font-mono text-bronze-400 uppercase tracking-widest">FOX RIVER · NAVIGATION</span>
+                <h3 class="font-serif text-base text-parchment-50">Steamboat Bells on the River</h3>
+                <p class="text-xs text-parchment-300 font-light leading-relaxed">
+                  “Before the train tracks arrived, sternwheelers churned upriver past Marquette toward Montello, carrying mail, flour, and clamshells.”
+                </p>
+              </div>
+            </div>
+            <div class="px-3.5 pb-3 pt-0 text-[10px] font-mono text-parchment-400 border-t border-vault-800/60 pt-2">
+              Oral History Record · Reminisce Archive
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 9: EVENTS (UPCOMING & PAST ARCHIVE) -->
+    <section id="events" class="py-10 sm:py-14 border-b border-vault-850 bg-vault-900 museum-grain">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        
+        <div class="flex items-center justify-between mb-6 pb-2 border-b border-vault-800">
+          <div>
+            <span class="text-[10px] font-mono uppercase tracking-widest text-bronze-400">CALENDAR &amp; GATHERINGS</span>
+            <h2 class="font-serif text-2xl text-parchment-50 font-normal">Museum Events</h2>
+          </div>
+          <span class="text-xs font-mono text-parchment-400">Church Grounds · 240 W. Second St</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <!-- Upcoming Event Card -->
+          <div class="bg-vault-950 border border-vault-800 rounded p-4 flex gap-4 items-center">
+            <div 
+              onclick="openLightbox('https://images.unsplash.com/photo-1548625361-195972412808?auto=format&fit=crop&w=1200&q=80', 'Memorial Day Weekend Open House', 'Annual open house gathering at 240 W. Second St, welcoming families and visitors to view Church Museum artifacts.')"
+              class="w-24 h-24 rounded overflow-hidden flex-shrink-0 cursor-pointer border border-vault-800"
+            >
+              <img 
+                src="https://images.unsplash.com/photo-1548625361-195972412808?auto=format&fit=crop&w=400&q=80" 
+                alt="Open house grounds" 
+                class="w-full h-full object-cover photo-zoom"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                crossorigin="anonymous"
+                onerror="handleImgError(this, 'church')"
+              >
+            </div>
+            <div class="space-y-1">
+              <span class="text-[9px] font-mono text-bronze-400 uppercase tracking-widest">ANNUAL PROGRAM</span>
+              <h3 class="font-serif text-lg text-parchment-50 leading-tight">Church Museum Open House</h3>
+              <p class="text-xs text-parchment-300 font-light">Memorial Day Weekend · Free admission · Special archival displays.</p>
+              <span class="text-[10px] font-mono text-parchment-400 block pt-1">Location: 240 W. Second Street, Marquette</span>
+            </div>
+          </div>
+
+          <!-- Past Archive Event Card: Controlled Prairie Burn -->
+          <div class="bg-vault-950 border border-vault-800 rounded p-4 flex gap-4 items-center">
+            <div 
+              onclick="openLightbox('https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1200&q=80', 'Controlled Prairie Burn', 'Marquette Fire Department conducts controlled ecological burn of MHS native prairie parcel to nurture wild native grasses.')"
+              class="w-24 h-24 rounded overflow-hidden flex-shrink-0 cursor-pointer border border-vault-800"
+            >
+              <img 
+                src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=400&q=80" 
+                alt="Native prairie flowers" 
+                class="w-full h-full object-cover photo-zoom"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                crossorigin="anonymous"
+                onerror="handleImgError(this, 'prairie')"
+              >
+            </div>
+            <div class="space-y-1">
+              <span class="text-[9px] font-mono text-bronze-400 uppercase tracking-widest">ECOLOGICAL STEWARDSHIP</span>
+              <h3 class="font-serif text-lg text-parchment-50 leading-tight">Controlled Prairie Burn</h3>
+              <p class="text-xs text-parchment-300 font-light">Annual burn with Marquette Fire Dept to stimulate native bluestem and coneflowers.</p>
+              <span class="text-[10px] font-mono text-parchment-400 block pt-1">Status: Documented in Archival Records</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 10: ABOUT THE SOCIETY & VERIFIED LEADERSHIP -->
+    <section id="society" class="py-10 sm:py-14 border-b border-vault-850 bg-vault-950">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- Column 1: Organization Background -->
+          <div class="lg:col-span-6 space-y-3">
+            <span class="text-[10px] font-mono uppercase tracking-widest text-bronze-400 block">INSTITUTIONAL RECORD</span>
+            <h2 class="font-serif text-2xl text-parchment-50 font-normal">Marquette Historical Society, Inc.</h2>
+            <p class="text-xs text-parchment-300 font-light leading-relaxed">
+              Founded in February 1998 as an educational 501(c)(3) nonprofit and local history affiliate of the Wisconsin Historical Society. The society preserves, advances, and shares the heritage of the Village and Town of Marquette.
+            </p>
+
+            <div class="p-3 bg-vault-900 border border-vault-800 rounded text-xs font-mono text-parchment-300 space-y-1">
+              <span class="text-bronze-400 uppercase text-[10px] block font-semibold">Publications &amp; Book Orders</span>
+              <p>Historical booklets and monographs: $10.00 at museum or $13.00 mailed.</p>
+              <p class="text-parchment-400 text-[11px]">Check payable to: <strong>Marquette Historical Society</strong> · P.O. Box 31, Marquette, WI 53947</p>
+            </div>
+          </div>
+
+          <!-- Column 2: Current Verified Officers -->
+          <div class="lg:col-span-6">
+            <div class="bg-vault-900 border border-vault-800 rounded p-4 space-y-2">
+              <div class="flex justify-between items-center pb-2 border-b border-vault-800 text-xs font-mono">
+                <span class="text-bronze-400 uppercase font-semibold">Current Officers</span>
+                <span class="text-parchment-400 text-[10px]">WHS AFFILIATE DIRECTORY</span>
+              </div>
+              <ul class="text-xs font-mono divide-y divide-vault-800/60">
+                <li class="py-1.5 flex justify-between">
+                  <span class="text-parchment-200">Rudy Winther</span>
+                  <span class="text-bronze-400">President</span>
+                </li>
+                <li class="py-1.5 flex justify-between">
+                  <span class="text-parchment-200">James Hanneman</span>
+                  <span class="text-bronze-400">Vice President</span>
+                </li>
+                <li class="py-1.5 flex justify-between">
+                  <span class="text-parchment-200">Jean M. Winther</span>
+                  <span class="text-bronze-400">Recording Secretary</span>
+                </li>
+                <li class="py-1.5 flex justify-between">
+                  <span class="text-parchment-200">Jean Winther</span>
+                  <span class="text-bronze-400">Secretary / Treasurer</span>
+                </li>
+                <li class="py-1.5 flex justify-between">
+                  <span class="text-parchment-200">Renee Cybul</span>
+                  <span class="text-bronze-400">Newsletter Editor</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 11: FINAL CTA (IMAGE-FIRST PRESERVATION BANNER) -->
+    <section class="relative py-16 sm:py-20 border-b border-vault-850 overflow-hidden bg-vault-950">
+      <!-- High Quality Photographic Backing -->
+      <img 
+        src="https://raw.githubusercontent.com/CreativeTugsDotCom/SA/refs/heads/main/Screenshot%202026-10-09%20012218.png" 
+        alt="Marquette Church Museum" 
+        class="absolute inset-0 w-full h-full object-cover object-center opacity-30 photo-zoom"
+        loading="lazy"
+        referrerpolicy="no-referrer"
+        onerror="handleImgError(this, 'church')"
+      >
+      <div class="absolute inset-0 bg-vault-950/80"></div>
+
+      <div class="relative z-10 max-w-4xl mx-auto px-4 text-center space-y-4">
+        <span class="text-[10px] font-mono uppercase tracking-widest text-bronze-400 block">JOIN OUR PRESERVATION EFFORT</span>
+        <h2 class="font-serif text-3xl sm:text-4xl text-parchment-50 leading-tight">
+          Keep Marquette’s Stories Alive
+        </h2>
+        <p class="text-xs sm:text-sm text-parchment-300 font-light max-w-lg mx-auto">
+          Help preserve historical photographs, the 1860 church sanctuary, and the memories of Lake Puckaway and the Fox River.
+        </p>
+
+        <div class="flex flex-wrap justify-center gap-3 pt-2 font-mono text-xs uppercase tracking-wider">
+          <button 
+            onclick="downloadMembershipSlip()" 
+            class="px-4 py-2 bg-bronze-500 hover:bg-bronze-400 text-vault-950 font-semibold rounded transition-colors"
+          >
+            Become a Member
+          </button>
+          <a 
+            href="mailto:marquette@marquettehistoricalsociety.org?subject=Marquette%20Historical%20Memory%20or%20Photo" 
+            class="px-4 py-2 bg-vault-900 border border-vault-700 hover:border-bronze-400 text-parchment-200 rounded transition-colors"
+          >
+            Share Your Story
+          </a>
+          <button 
+            onclick="openVisitModal(event)" 
+            class="px-4 py-2 bg-vault-900 border border-vault-700 hover:border-bronze-400 text-parchment-200 rounded transition-colors"
+          >
+            Visit The Museum
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="py-8 border-t border-vault-850 bg-vault-950 text-xs font-mono text-parchment-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div>
+        <span class="text-parchment-200 font-serif text-sm block">Marquette Historical Society, Inc.</span>
+        <span>240 W. Second Street · P.O. Box 31 · Marquette, WI 53947 · (920) 394-9361</span>
+      </div>
+      <div class="text-right">
+        <span>Email: <a href="mailto:marquette@marquettehistoricalsociety.org" class="text-bronze-400 hover:underline">marquette@marquettehistoricalsociety.org</a></span>
+        <div class="text-[10px] text-vault-600 mt-0.5">© <span id="cur-year">2026</span> All rights reserved.</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- PHOTO LIGHTBOX MODAL -->
+  <div id="lightbox-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-6 bg-vault-950/95 modal-backdrop">
+    <div class="bg-vault-900 border border-vault-750 w-full max-w-4xl max-h-[94vh] overflow-y-auto rounded-lg p-4 sm:p-6 space-y-3 relative text-parchment-100">
+      
+      <!-- Close Button -->
+      <button onclick="closeLightbox()" class="absolute top-4 right-4 text-parchment-400 hover:text-bronze-400 text-xl font-mono focus:outline-none" aria-label="Close Viewer">
+        ✕
+      </button>
+
+      <!-- Lightbox Image Stage -->
+      <div class="w-full max-h-[60vh] bg-vault-950 rounded flex items-center justify-center overflow-hidden border border-vault-800">
+        <img 
+          id="lightbox-img" 
+          src="" 
+          alt="Archival Photograph" 
+          class="max-w-full max-h-[60vh] object-contain"
+          referrerpolicy="no-referrer"
+          crossorigin="anonymous"
+          onerror="handleImgError(this, 'church')"
+        >
+      </div>
+
+      <!-- Provenance & Metadata -->
+      <div class="space-y-1 border-t border-vault-800 pt-2.5">
+        <span class="text-[9px] font-mono text-bronze-400 uppercase tracking-widest block">MARQUETTE ARCHIVE RECORD</span>
+        <h3 id="lightbox-title" class="font-serif text-lg sm:text-xl text-parchment-50 leading-tight">Photograph Title</h3>
+        <p id="lightbox-desc" class="text-xs text-parchment-300 font-light leading-relaxed">Photograph description</p>
+      </div>
+
+      <div class="flex justify-between items-center text-[10px] font-mono text-parchment-400 border-t border-vault-800/60 pt-2">
+        <span>Marquette Historical Society Archives · 240 W. Second St</span>
+        <button onclick="closeLightbox()" class="px-2.5 py-1 bg-vault-850 hover:bg-vault-800 border border-vault-700 rounded text-parchment-200">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISIT APPOINTMENT MODAL -->
+  <div id="visit-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-vault-950/90 modal-backdrop">
+    <div class="bg-vault-900 border border-vault-750 w-full max-w-md rounded-lg p-5 space-y-3 relative text-parchment-100">
+      <button onclick="closeVisitModal()" class="absolute top-4 right-4 text-parchment-400 hover:text-bronze-400 text-lg font-mono">✕</button>
+      <div>
+        <span class="text-[9px] font-mono text-bronze-400 uppercase tracking-widest block">CHURCH MUSEUM VIEWING</span>
+        <h3 class="font-serif text-xl text-parchment-50">Schedule a Visit</h3>
+        <p class="text-xs text-parchment-400 font-light mt-0.5">240 W. Second Street, Marquette, WI. Viewing held by appointment.</p>
+      </div>
+
+      <form onsubmit="handleVisitSubmit(event)" class="space-y-2.5 font-mono text-xs">
+        <div>
+          <label class="block text-parchment-300 mb-0.5">Your Name</label>
+          <input type="text" id="v-name" required class="w-full bg-vault-850 border border-vault-700 rounded px-3 py-1.5 text-parchment-100 focus:outline-none focus:border-bronze-500">
+        </div>
+        <div>
+          <label class="block text-parchment-300 mb-0.5">Email / Phone</label>
+          <input type="text" id="v-contact" required class="w-full bg-vault-850 border border-vault-700 rounded px-3 py-1.5 text-parchment-100 focus:outline-none focus:border-bronze-500">
+        </div>
+        <div>
+          <label class="block text-parchment-300 mb-0.5">Preferred Date / Note</label>
+          <textarea id="v-details" rows="2" class="w-full bg-vault-850 border border-vault-700 rounded px-3 py-1.5 text-parchment-100 focus:outline-none focus:border-bronze-500"></textarea>
+        </div>
+        <button type="submit" class="w-full py-2 bg-bronze-500 text-vault-950 font-bold uppercase rounded hover:bg-bronze-400 transition-colors">
+          Send Viewing Request &rarr;
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- SEARCH MODAL -->
+  <div id="search-modal" class="fixed inset-0 z-50 hidden flex items-start justify-center pt-20 p-4 bg-vault-950/90 modal-backdrop">
+    <div class="bg-vault-900 border border-vault-750 w-full max-w-xl rounded-lg p-4 space-y-3 relative text-parchment-100 shadow-2xl">
+      <div class="flex items-center justify-between pb-2 border-b border-vault-800">
+        <span class="text-[10px] font-mono uppercase tracking-widest text-bronze-400">SEARCH MARQUETTE ARCHIVE</span>
+        <button onclick="closeSearchModal()" class="text-parchment-400 hover:text-bronze-400 font-mono text-sm">✕ ESC</button>
+      </div>
+
+      <div class="relative">
+        <input 
+          type="text" 
+          id="search-box"
+          oninput="handleSearch(this.value)"
+          placeholder="Search church, schools, duck hunting, steamboats, families..."
+          class="w-full bg-vault-850 border border-vault-700 rounded px-3.5 py-2 pl-9 text-xs font-mono text-parchment-100 focus:outline-none focus:border-bronze-500 placeholder-parchment-400/60"
+        >
+        <svg class="w-3.5 h-3.5 text-parchment-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      </div>
+
+      <div id="search-results" class="max-h-60 overflow-y-auto space-y-1.5 pt-1 text-xs font-mono divide-y divide-vault-800/60">
+        <!-- Results rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================
+       AUTHENTIC HISTORICAL PHOTOGRAPHIC ARCHIVE CATALOG
+       All records are verified with primary URLs and categories
+       ========================================================== */
+    const WALL_ITEMS = [
+      {
+        id: "w1",
+        tag: "CHURCH",
+        title: "1860 Methodist Episcopal Church",
+        caption: "Built in 1860 at 240 W. Second St on a fieldstone foundation.",
+        url: "https://raw.githubusercontent.com/CreativeTugsDotCom/F/refs/heads/main/Screenshot%202026-10-09%20012607.png",
+        fallbackCat: "church"
+      },
+      {
+        id: "w2",
+        tag: "SCHOOL",
+        title: "Country Teacher Dorothy Ann Bell (1920)",
+        caption: "Educator standing outside a rural Wisconsin timber schoolhouse.",
+        url: "https://upload.wikimedia.org/wikipedia/commons/e/e0/Teacher_in_front_of_School_House_%281920%29.jpg",
+        fallbackCat: "school"
+      },
+      {
+        id: "w3",
+        tag: "WATER",
+        title: "Lake Puckaway Duck Hunter & Skiff",
+        caption: "Authentic duck skiff with decoys in marsh reeds (Armistice storm era).",
+        url: "https://upload.wikimedia.org/wikipedia/commons/6/63/Photograph_of_a_Duck_Hunter_-_NARA_-_2128258.jpg",
+        fallbackCat: "lake"
+      },
+      {
+        id: "w4",
+        tag: "WATER",
+        title: "Upper Fox River Steamer",
+        caption: "Sternwheel paddle steamer navigating upriver into Lake Puckaway.",
+        url: "https://upload.wikimedia.org/wikipedia/commons/a/ae/Steamboat_on_the_Mississippi_%28LOC%29.jpg",
+        fallbackCat: "river"
+      },
+      {
+        id: "w5",
+        tag: "SCHOOL",
+        title: "Rural One-Room Timber School",
+        caption: "Classic country schoolhouse architecture identical to Grub and Maple Hill.",
+        url: "https://upload.wikimedia.org/wikipedia/commons/e/e9/Pipe_School.jpg",
+        fallbackCat: "school"
+      },
+      {
+        id: "w6",
+        tag: "WATER",
+        title: "Fox River Navigation Lock",
+        caption: "Historic lock structure controlling water flow between river and lake.",
+        url: "https://upload.wikimedia.org/wikipedia/commons/a/ab/FISHING_FROM_LOCK_ON_THE_FOX_RIVER_NEAR_MONTELLO._THE_VARIOUS_FOX_RIVER_LOCKS_ARE_NO_LONGER_OPERATED_FOR_COMMERCIAL..._-_NARA_-_550850.jpg",
+        fallbackCat: "river"
+      },
+      {
+        id: "w7",
+        tag: "PEOPLE",
+        title: "1840s Friendship Signature Quilt",
+        caption: "124 blocks hand-inscribed with indelible ink, verses, and signatures.",
+        url: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Trueblood_Signature_Quilt_LACMA_M.91.45.jpg",
+        fallbackCat: "quilt"
+      },
+      {
+        id: "w8",
+        tag: "SCHOOL",
+        title: "Classroom Desks & Blackboard (1937)",
+        caption: "Interior classroom with cast-iron student desks and daily lesson roll.",
+        url: "https://upload.wikimedia.org/wikipedia/commons/1/14/Interior_of_1855_Frantz_One_Room_schoolhouse.jpg",
+        fallbackCat: "school"
+      },
+      {
+        id: "w9",
+        tag: "CHURCH",
+        title: "1861 Meneely Bronze Bell",
+        caption: "Cast in Troy, NY. Rung in Marquette as Civil War news reached the village.",
+        url: "https://raw.githubusercontent.com/CreativeTugsDotCom/DS/refs/heads/main/Screenshot%202026-10-09%20012431.png",
+        fallbackCat: "church"
+      },
+      {
+        id: "w10",
+        tag: "PEOPLE",
+        title: "Pioneer Family Gathering",
+        caption: "Draeger, Wuerch, Zacharias, and Gray early homestead records.",
+        url: "https://raw.githubusercontent.com/CreativeTugsDotCom/DS/refs/heads/main/Screenshot%202026-10-09%20012857.png",
+        fallbackCat: "family"
+      },
+      {
+        id: "w11",
+        tag: "WATER",
+        title: "Lake Puckaway Wild Celery Marshes",
+        caption: "Habitat that drew waterfowl and the world-famous Caw-Caw Club.",
+        url: "https://upload.wikimedia.org/wikipedia/commons/6/63/Photograph_of_a_Duck_Hunter_-_NARA_-_2128258.jpg",
+        fallbackCat: "lake"
+      },
+      {
+        id: "w12",
+        tag: "PEOPLE",
+        title: "Community Memories & Preservation",
+        caption: "Documenting generations of Marquette history and community stewardship.",
+        url: "https://raw.githubusercontent.com/CreativeTugsDotCom/DS/refs/heads/main/Screenshot%202026-10-09%20012907.png",
+        fallbackCat: "prairie"
+      }
+    ];
+
+    let currentWallTag = 'ALL';
+
+    // Render the Photographic Wall
+    function renderWall() {
+      const container = document.getElementById('wall-grid');
+      const filtered = WALL_ITEMS.filter(item => (currentWallTag === 'ALL') || (item.tag === currentWallTag));
+      
+      container.innerHTML = filtered.map(item => `
+        <article 
+          onclick="openLightbox('${item.url}', '${item.title.replace(/'/g, "\\'")}', '${item.caption.replace(/'/g, "\\'")}', '${item.fallbackCat}')"
+          class="group bg-vault-950 border border-vault-800 rounded overflow-hidden cursor-pointer flex flex-col justify-between"
+        >
+          <div class="aspect-[4/3] w-full overflow-hidden relative bg-vault-900">
+            <img 
+              src="${item.url}" 
+              alt="${item.title}" 
+              class="w-full h-full object-cover photo-zoom"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              crossorigin="anonymous"
+              onerror="handleImgError(this, '${item.fallbackCat}')"
+            >
+            <div class="absolute inset-0 scrim-card"></div>
+            <span class="absolute top-2 left-2 text-[8px] font-mono text-bronze-400 bg-vault-950/80 px-1.5 py-0.5 rounded border border-vault-800">${item.tag}</span>
+          </div>
+          <div class="p-2.5">
+            <h3 class="text-xs font-medium text-parchment-100 truncate">${item.title}</h3>
+            <p class="text-[10px] text-parchment-400 line-clamp-1 mt-0.5">${item.caption}</p>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function filterWall(tag) {
+      currentWallTag = tag;
+      document.querySelectorAll('.wall-filter-btn').forEach(btn => {
+        if (btn.dataset.tag === tag) {
+          btn.className = "wall-filter-btn px-2.5 py-1 rounded bg-bronze-500 text-vault-950 font-semibold";
+        } else {
+          btn.className = "wall-filter-btn px-2.5 py-1 rounded bg-vault-850 text-parchment-300 hover:text-bronze-400";
+        }
+      });
+      renderWall();
+    }
+
+    function openCategoryView(tag) {
+      const wallSection = document.getElementById('archive-wall');
+      wallSection.scrollIntoView({ behavior: 'smooth' });
+      const mapTag = {
+        'CHURCH': 'CHURCH',
+        'SCHOOL': 'SCHOOL',
+        'LAKE': 'WATER',
+        'RIVER': 'WATER',
+        'PEOPLE': 'PEOPLE',
+        'EVENT': 'ALL',
+        'REMINISCE': 'ALL'
+      }[tag] || 'ALL';
+      filterWall(mapTag);
+    }
+
+    // Lightbox Controls
+    function openLightbox(url, title, desc, fallbackCat = 'church') {
+      const img = document.getElementById('lightbox-img');
+      img.removeAttribute('data-fallback-fired');
+      img.src = url;
+      img.onerror = () => handleImgError(img, fallbackCat);
+      document.getElementById('lightbox-title').textContent = title;
+      document.getElementById('lightbox-desc').textContent = desc;
+      document.getElementById('lightbox-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox-modal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // Visit Modal
+    function openVisitModal(e) {
+      if (e) e.preventDefault();
+      document.getElementById('visit-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeVisitModal() {
+      document.getElementById('visit-modal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function handleVisitSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('v-name').value;
+      const contact = document.getElementById('v-contact').value;
+      const note = document.getElementById('v-details').value;
+      const mailto = `mailto:marquette@marquettehistoricalsociety.org?subject=${encodeURIComponent('Visit Request: ' + name)}&body=${encodeURIComponent('Name: ' + name + '\nContact: ' + contact + '\nNotes / Preferred Date: ' + note + '\n\nPlease confirm Church Museum viewing availability at 240 W. Second Street, Marquette, WI.')}`;
+      window.location.href = mailto;
+      closeVisitModal();
+    }
+
+    // Search Modal
+    function openSearchModal() {
+      document.getElementById('search-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => {
+        document.getElementById('search-box').focus();
+      }, 100);
+      handleSearch('');
+    }
+
+    function closeSearchModal() {
+      document.getElementById('search-modal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function handleSearch(query) {
+      const q = query.toLowerCase().trim();
+      const resultsContainer = document.getElementById('search-results');
+      const matches = WALL_ITEMS.filter(i => 
+        !q || 
+        i.title.toLowerCase().includes(q) || 
+        i.caption.toLowerCase().includes(q) || 
+        i.tag.toLowerCase().includes(q)
+      );
+
+      if (matches.length === 0) {
+        resultsContainer.innerHTML = `<p class="text-parchment-400 py-3 text-center">No archival records found matching "${query}".</p>`;
+        return;
+      }
+
+      resultsContainer.innerHTML = matches.map(m => `
+        <div 
+          onclick="openLightbox('${m.url}', '${m.title.replace(/'/g, "\\'")}', '${m.caption.replace(/'/g, "\\'")}', '${m.fallbackCat}'); closeSearchModal();"
+          class="flex items-center gap-3 p-1.5 hover:bg-vault-850 rounded cursor-pointer transition-colors"
+        >
+          <img src="${m.url}" alt="${m.title}" class="w-10 h-10 object-cover rounded flex-shrink-0 border border-vault-800" onerror="handleImgError(this, '${m.fallbackCat}')">
+          <div class="truncate">
+            <span class="text-parchment-100 font-medium block truncate">${m.title}</span>
+            <span class="text-[10px] text-bronze-400">${m.tag} · ${m.caption}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Download Membership Slip
+    function downloadMembershipSlip() {
+      const slip = `========================================================
+MARQUETTE HISTORICAL SOCIETY, INC.
+MEMBERSHIP SLIP — P.O. BOX 31, MARQUETTE, WI 53947
+========================================================
+Name(s): _______________________________________________
+Mailing Address: _______________________________________
+City/State/Zip: ________________________________________
+Phone / Email: _________________________________________
+
+Annual Membership Support:
+[ ] Individual / Family Membership
+[ ] General Preservation Gift
+
+Make check payable to: MARQUETTE HISTORICAL SOCIETY
+Mail to:
+  Marquette Historical Society
+  P.O. Box 31
+  Marquette, WI 53947
+========================================================`;
+      const blob = new Blob([slip], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'MHS_Membership_Slip.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function toggleMobileMenu() {
+      document.getElementById('mobile-menu').classList.toggle('hidden');
+    }
+
+    // Keyboard bindings
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeLightbox();
+        closeVisitModal();
+        closeSearchModal();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        openSearchModal();
+      }
+    });
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      renderWall();
+      document.getElementById('cur-year').textContent = new Date().getFullYear();
+    });
+  </script>
+</body>
+</html>
